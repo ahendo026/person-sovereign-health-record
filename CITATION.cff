@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this specification, please cite it as below."
+title: "Person-Sovereign Health Record Architecture"
+version: "0.20"
+date-released: "2026-09-29"
+authors:
+  - family-names: Henderson
+    given-names: Arthur R.
+    affiliation: Precision Health Ventures
+license: CC-BY-4.0
+repository-code: "https://github.com/ahendo026/person-sovereign-health-record"
+abstract: "An open specification for a health record the person controls: readable folders paired with FHIR entries, source links on every fact, a person-held key hierarchy, jurisdiction-aware protected categories, AI governed under Earned Autonomy, and portable network objects for requests, receipts, and disclosure proofs."
+keywords:
+  - health records
+  - FHIR
+  - patient sovereignty
+  - Earned Autonomy
+  - consent
