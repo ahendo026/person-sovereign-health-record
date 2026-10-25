@@ -3,7 +3,7 @@
 An open specification for a health record that the person controls: a set of ordinary folders and readable files, every entry paired with a plain-language version and stored in FHIR, complete without any platform, portable by copying, with every fact linked to its source and with AI that proposes and never decides.
 
 **Current version: Specification v0.21 (Public Release Candidate), October 25, 2026.**
-The specification is `SPEC.md`. The document history is `CHANGELOG.md`. Release copies (PDF and DOCX) are in `releases/`.
+The specification is `SPEC.md`. The document history is `CHANGELOG.md`. Release copies (PDF and DOCX) are in `releases/` and attached to the [v0.21 GitHub release](https://github.com/ahendo026/person-sovereign-health-record/releases/tag/v0.21).
 
 ## What the specification defines
 
