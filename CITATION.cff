@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this specification, please cite it as below."
 title: "Person-Sovereign Health Record Architecture"
-version: "0.20"
-date-released: "2026-09-29"
+version: "0.21"
+date-released: "2026-10-25"
 authors:
   - family-names: Henderson
     given-names: Arthur R.

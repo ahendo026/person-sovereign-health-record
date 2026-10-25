@@ -2,17 +2,17 @@
 
 An open specification for a health record that the person controls: a set of ordinary folders and readable files, every entry paired with a plain-language version and stored in FHIR, complete without any platform, portable by copying, with every fact linked to its source and with AI that proposes and never decides.
 
-**Current version: Specification v0.20 (First Public Release Candidate), September 29, 2026.**
+**Current version: Specification v0.21 (Public Release Candidate), October 25, 2026.**
 The specification is `SPEC.md`. The document history is `CHANGELOG.md`. Release copies (PDF and DOCX) are in `releases/`.
 
 ## What the specification defines
 
-- The record: twenty numbered folders plus governance and environment folders, the two clocks every entry keeps, continuous data, life context, omics, condition and body-system views, records held on behalf of another person, education records, lifestyle logs, tasks and the pre-visit brief, and the environment folder that records how a copy is set up (Part I).
+- The record: twenty numbered folders plus governance and environment folders, the two clocks every entry keeps and the element that carries record time, continuous data, laboratory results, life context, omics, condition and body-system views, records held on behalf of another person, education records, lifestyle logs, tasks and the pre-visit brief, and the environment folder that records how a copy is set up (Part I).
 - Control and protection: who can see what, emergency access, corrections, categories protected by law as a function of jurisdiction, where the record can live, the key hierarchy and recovery scheme, and the network objects: participant identity, requests, redemption receipts, and disclosure proofs (Part II).
 - Intelligence: works with any AI, context files, and what the AI is allowed to do on its own under Earned Autonomy, including the rule that the AI never controls access and never changes the model serving a task on its own (Part III).
 - Context and boundaries: federal and international alignment, and what is deliberately deferred (Part IV).
 
-Sections 5.4, 5.5, 6.1, and 2.17 use conformance language (MUST, SHOULD, MAY). Everything else is architecture in plain language.
+Sections 2.5, 2.18, 5.4, 5.5, 6, 6.1, and 2.17 use conformance language (MUST, SHOULD, MAY), as does the write-once rule in Section 2. Everything else is architecture in plain language.
 
 ## First implementation
 

@@ -1,8 +1,8 @@
 # Person-Sovereign Health Record Architecture
 
-**Specification v0.20 (First Public Release Candidate)**  
+**Specification v0.21 (Public Release Candidate)**  
 First implementation: SHIRLe Health / HealthDigits  
-Precision Health Ventures, September 29, 2026  
+Precision Health Ventures, October 25, 2026  
 License: CC BY 4.0 (specification text). Patent pending.
 
 ## Table of Contents
@@ -29,6 +29,7 @@ License: CC BY 4.0 (specification text). Patent pending.
     - 2.15 Training, Nutrition, Mindfulness, and Recovery
     - 2.16 Before the Visit: Tasks, Repeats, and What to Bring
     - 2.17 The Environment Folder: How This Copy Is Set Up
+    - 2.18 Laboratory Results
   - 3. How Information Gets In
     - 3.1 Bulk Import: Seeding the Record from a Full Medical Record Export
 - Part II: Control and Protection
@@ -61,6 +62,8 @@ License: CC BY 4.0 (specification text). Patent pending.
 This specification is organized in four parts. Part I (Sections 1 to 3) describes the record itself: what it is, how it is organized, and how information gets into it, including the complete medical record exports (EHI exports) that federal law entitles every person to and that this architecture is built to receive. Part II (Sections 4 and 5) covers control and protection: who can see what, and how the record is protected wherever it lives. Part III (Sections 6 and 7) covers intelligence: how any AI can work with the record and what the AI is allowed to do on its own. Part IV (Sections 8 and 9) places the architecture in its program and federal context and names what is deliberately deferred. Appendices define terms, show the record at a glance, and index where things go.
 
 **Document history:**
+
+v0.21: Folder 06 renamed from 06-observations to 06-results, with five named subfolders: labs, labs-reproductive (its own sharing boundary), vitals, device-readings (Device Readings, the continuous data of Section 2.6), and implanted-devices (Implanted Devices, formerly the implants list); the rename carries through Sections 2.1, 2.4, 2.6, 2.10, 2.11, 2.15, and 3, Appendix B, and Appendix C. New Section 2.18: laboratory results (one entry per result and one report entry per panel, standard codes and units with the as-read values retained, one series per test across every source, the abstain rule for unresolved codes, the correction rule, and the file naming and path constraints a conforming implementation follows). Section 2.5 names the record-time element in conformance language. Section 2 states that originals and filed entries are write-once. Section 6 adds the healthcare harness as a defined term and says open-weight where it said open-source. Terms added to Appendix A. Built on v0.20 of September 29, 2026.
 
 v0.20: New Section 2.17: the environment folder (_environment/), which holds how this copy of the record is set up: the governing jurisdiction and active law-pinned set with its change history, record settings, the AI routing map, the model registry, per-model cost and quality tallies, pending routing proposals, cryptographic configuration identifiers, and implementation identity. A change of the AI model serving a task type is never automatic (Sections 7.1 and 7.3, now four kinds of permanent protection); context files carry the routing map and the arriving model's own track record (Section 6.1). Terms added to Appendix A; the folder added to Appendix B; AI model selection, jurisdiction setting, and model registry indexed in Appendix C. This version merges two September 2026 branches that were both built on v0.18 and both numbered v0.19: the September 15 branch (Section 2.16, tasks and the pre-visit brief) is the base, and the September 27 branch (the environment folder) is carried in as Section 2.17, rebuilt from its issuing instruction and aligned to the wording filed in Provisional A Specification v1.2, Section 4. Built on v0.19 of September 15, 2026.
 
@@ -146,8 +149,9 @@ health-record/
  03-conditions/ diagnoses and allergies; dental kept separate
  04-medications/ prescriptions; vitamins and supplements kept separate
  05-immunizations/ vaccines
- 06-observations/ lab results, vitals, device and wearable data,
- questionnaires; implants/ lists devices in your body
+ 06-results/ lab results, vitals, device readings, questionnaires;
+ subfolders labs/, labs-reproductive/, vitals/,
+ device-readings/, implanted-devices/ (devices in your body)
  07-procedures/ surgeries and procedures
  08-encounters/ visits and hospital stays
  09-documents/ original scans, photos, files, clinician notes
@@ -172,13 +176,13 @@ Organizational choices that matter to the person who owns the record:
 
 - Categories you might want to share separately get their own folder. Vaccine records, reproductive health labs, behavioral health content, dental records, your journal, and your family’s history are kept structurally apart, so you can share one without exposing the others.
 - The inbox shows what is waiting. Anything sitting in 00-inbox has been captured (a photo of a visit summary, or a visit record a provider sent back after check-in) but not yet filed. You can see the system’s to-do list just by looking.
-- Originals are never thrown away. Folder 09 keeps every scan and photo permanently, so any entry in the record can always be checked against the document it came from.
+- Originals are never thrown away. Folder 09 keeps every scan and photo permanently, so any entry in the record can always be checked against the document it came from. A conforming implementation MUST provide no operation that overwrites or deletes an original in folder 09 or a filed entry; a correction is a new entry (Section 2.5), and removal where the law or the person requires it is an administrative action recorded in the access history.
 - The record looks forward as well as back. Referrals that have been placed but not yet scheduled, and orders that are pending, live in 10-care-plans, so the question “what is supposed to happen next” always has an answer.
 - Rules and setup are kept apart. A line that answers “who is allowed to do what” lives in _governance; a line that answers “how is this record set up” lives in _environment (Section 2.17). Keeping them apart means the rulebook never fills with configuration, and moving the record to a new implementation carries its setup without carrying anyone's authority.
 
 ### 2.1 Your Journal
 
-Folder 12 is the one part of the record you author entirely yourself: diary entries, symptom notes in your own words, questions you want to ask at the next appointment, observations about a family member you care for. It is a first-class folder for two reasons. First, it is independently shareable: you can show your journal to a therapist but not your cardiologist, or share your clinical record widely while keeping the journal fully private. Second, it gives the AI honest context for questions like “when did I start feeling this way,” with the answer’s source link pointing to your dated entry. The AI never rewrites or restructures journal text; it is your writing, permanently, exactly as you wrote it. If the AI notices something clinically meaningful in an entry (for example a note that suggests a medication side effect), that observation follows the normal rules in Section 7: it becomes a suggestion awaiting your approval, never a silent change to the record. Notes written by clinicians are not journal content; they live in 09-documents. Structured self-tracking with numbers and scales lives in 06-observations, and self-directed training, nutrition, and recovery logs live in 19-lifestyle (Section 2.15).
+Folder 12 is the one part of the record you author entirely yourself: diary entries, symptom notes in your own words, questions you want to ask at the next appointment, observations about a family member you care for. It is a first-class folder for two reasons. First, it is independently shareable: you can show your journal to a therapist but not your cardiologist, or share your clinical record widely while keeping the journal fully private. Second, it gives the AI honest context for questions like “when did I start feeling this way,” with the answer’s source link pointing to your dated entry. The AI never rewrites or restructures journal text; it is your writing, permanently, exactly as you wrote it. If the AI notices something clinically meaningful in an entry (for example a note that suggests a medication side effect), that observation follows the normal rules in Section 7: it becomes a suggestion awaiting your approval, never a silent change to the record. Notes written by clinicians are not journal content; they live in 09-documents. Structured self-tracking with numbers and scales lives in 06-results, and self-directed training, nutrition, and recovery logs live in 19-lifestyle (Section 2.15).
 
 ### 2.2 Legal Documents and Your Wishes
 
@@ -190,7 +194,7 @@ Folder 02 names not only your doctors and clinics but also the people who care f
 
 ### 2.4 Family History and Implanted Devices
 
-Folder 14 holds the health history of your relatives (for example a parent’s heart disease or a sibling’s cancer), which clinicians routinely need and which deserves its own sharing boundary because it is partly information about other people. The implants list inside 06 records any device in or on your body (a pacemaker, an insulin pump, a stent, a joint replacement), including safety details such as imaging compatibility, kept separate from the data streams those devices may produce.
+Folder 14 holds the health history of your relatives (for example a parent’s heart disease or a sibling’s cancer), which clinicians routinely need and which deserves its own sharing boundary because it is partly information about other people. The Implanted Devices list (06-results/implanted-devices/) records any device in or on your body (a pacemaker, an insulin pump, a stent, a joint replacement), including safety details such as imaging compatibility, kept separate from the device readings those devices may produce (06-results/device-readings/).
 
 ### 2.5 How the Record Understands Time
 
@@ -208,11 +212,13 @@ The record’s summaries are built from these five kinds directly. A visit summa
 
 One honest boundary: the record treats order and cause differently. That the dizziness began two days after a new medication is a fact of order, and the AI may point that order out to you. That the medication caused the dizziness is a claim, and claims enter the record only the way every suggestion does (Section 7): proposed, attributed, and waiting for approval. The record will show you sequences freely and assert causes never.
 
+How the two clocks are written. Event time is carried in the standard field each kind of entry already has for it (for a result, the time the specimen was taken; for a medication, its start). Record time has no standard field, so this specification defines one. A conforming implementation MUST record record time on every entry in the extension https://precisionhealthventures.com/fhir/StructureDefinition/pshr-record-time, as a date and time with offset, set once when the entry is filed and never changed. A correction is a new entry with its own record time that names the entry it supersedes (Section 2.18 states the rule for results; it applies to every folder). The element's name is permanent: it appears in every entry ever written, so it cannot be renamed without re-filing the record. Standard fields that mean something else (the time a laboratory released a result, the last time a file was touched) are kept where the source supplies them and are never used as record time.
+
 ### 2.6 Continuous Data: Glucose Monitors, Wearables, and Workouts
 
 Some sources do not produce facts one at a time; they produce a signal. A glucose monitor reports around the clock, a wearable tracks heart rate and sleep all night, a workout records second by second. The record handles these differently from single facts, in five ways.
 
-Raw readings are kept; summaries are shown. The readings themselves are stored in daily and weekly blocks as the permanent evidence layer, the same role original scans play for documents. What you see when you open the folder is the readable layer built on top: plain-language daily and weekly summaries, with the raw detail always one step below if you or your clinician want it.
+Raw readings are kept; summaries are shown. The readings themselves are stored in daily and weekly blocks as the permanent evidence layer, the same role original scans play for documents. What you see when you open the folder is the readable layer built on top: plain-language daily and weekly summaries, with the raw detail always one step below if you or your clinician want it. In the folder tree these blocks live in 06-results/device-readings/ (Device Readings), kept apart from single results so that a month of readings never buries one lab value.
 
 Calculated numbers are a third kind of fact. Alongside values read directly from a source and values the AI estimated, the record recognizes computed values: numbers produced by a fixed, named calculation, such as time in healthy glucose range. Rerunning the same calculation on the same readings gives the same answer, so computed values file automatically, and each records which calculation, and which version of it, produced it. If readings arrive late (devices often sync after the fact), the affected summaries are simply recomputed, and the record’s two clocks (Section 2.5) keep both the before and the after visible.
 
@@ -248,15 +254,15 @@ Condition links follow the record’s standing honesty rules. When a source docu
 
 ### 2.10 Vision, Hearing, and Dental
 
-Eyes, ears, and teeth live in separate provider ecosystems that rarely connect to medical record systems at all: an optometrist, an audiologist, and a dentist each keep their own records, and none of them typically appears in a hospital’s export. Folder 17 gives this care a home. It holds eyeglass and contact lens prescriptions, exam results, audiograms, hearing aid records and settings, dental charts, treatment plans, and the bills and insurance records those visits generate (linked to folder 11 like any other cost). Because these providers rarely offer exports, photographing the paper is usually the way this content arrives, which is exactly what the capture path (Section 3) was built for. Corrective devices with clinical significance (hearing aids, dentures, implanted dental work) are listed alongside the implants of Section 2.4.
+Eyes, ears, and teeth live in separate provider ecosystems that rarely connect to medical record systems at all: an optometrist, an audiologist, and a dentist each keep their own records, and none of them typically appears in a hospital’s export. Folder 17 gives this care a home. It holds eyeglass and contact lens prescriptions, exam results, audiograms, hearing aid records and settings, dental charts, treatment plans, and the bills and insurance records those visits generate (linked to folder 11 like any other cost). Because these providers rarely offer exports, photographing the paper is usually the way this content arrives, which is exactly what the capture path (Section 3) was built for. Corrective devices with clinical significance (hearing aids, dentures, implanted dental work) are listed alongside the implanted devices of Section 2.4.
 
 ### 2.11 Functional and Developmental Status
 
-How a person moves through the world and manages daily life is health information, and federal data standards treat it as such (functional status is a standard element of the same rules that govern exports). The record files it in the observations folder as its own conventions: gait and balance, falls and near-falls, mobility equipment (wheelchairs, walkers, canes, and their specifications, kept with the device list), what daily activities require assistance and how much, and changes over time, which the record’s trend machinery (Section 2.6) treats like any other signal worth watching. This content matters most to the people the inclusive design methodology centers: it is what a caregiver needs to coordinate help, what disability documentation draws on, and what a new clinician most needs to know and is least likely to find in a hospital export.
+How a person moves through the world and manages daily life is health information, and federal data standards treat it as such (functional status is a standard element of the same rules that govern exports). The record files it in the results folder (06-results) under its own conventions: gait and balance, falls and near-falls, mobility equipment (wheelchairs, walkers, canes, and their specifications, kept with the Implanted Devices list), what daily activities require assistance and how much, and changes over time, which the record’s trend machinery (Section 2.6) treats like any other signal worth watching. This content matters most to the people the inclusive design methodology centers: it is what a caregiver needs to coordinate help, what disability documentation draws on, and what a new clinician most needs to know and is least likely to find in a hospital export.
 
 The record organizes this content on the World Health Organization’s International Classification of Functioning, Disability and Health (the ICF), the international framework that describes health in terms of body function, activity, and participation rather than diagnosis alone. Using an international frame matters because functional status is exactly the content that must survive a move between countries and systems.
 
-Developmental and therapy goals are their own kind of fact, distinct from the continuous streams of Section 2.6. Each goal entry carries the goal itself, the starting point when it was set, the target, dated progress observations, who assessed progress, and which instrument they used. Departures from the expected trajectory are surfaced the same way stream departures are (Section 2.6), because the caregiver’s question is the same: is the pattern changing.
+Developmental and therapy goals are their own kind of fact, distinct from the device readings of Section 2.6. Each goal entry carries the goal itself, the starting point when it was set, the target, dated progress observations, who assessed progress, and which instrument they used. Departures from the expected trajectory are surfaced the same way stream departures are (Section 2.6), because the caregiver’s question is the same: is the pattern changing.
 
 ### 2.12 Records Held on Behalf of Another Person
 
@@ -296,7 +302,7 @@ Body-system views join the five temporal views of Section 2.5 and the condition 
 
 Much of what a person does for their own health never passes through a clinic: the training block they are working through, what they eat, the meditation practice they keep, and how well they are recovering. Folder 19 holds this self-directed work: workout and training logs, nutrition and hydration logs, sleep routine and quality as the person tracks it, mindfulness and meditation sessions, recovery signals such as heart rate variability, resting heart rate, training load, soreness and rest days, and the goals the person set for themselves, recorded in the same shape as the goals of Section 2.11 (goal, starting point, target, dated progress, who assessed it, which instrument).
 
-Source and purpose decide, not the device. The same wrist sensor can produce clinical evidence and self-tracking, so the rule is about how the data is used, not what produced it. Anything a clinician ordered, or reads as clinical evidence, belongs in observations: a sleep study, a cardiac rehabilitation plan, a home blood pressure series a physician asked for. Anything the person is doing for themselves belongs here: a self-directed training block, a food diary, a meditation streak. When self-tracked content becomes clinically relevant, it is not moved; the clinical views simply reach into this folder like any other.
+Source and purpose decide, not the device. The same wrist sensor can produce clinical evidence and self-tracking, so the rule is about how the data is used, not what produced it. Anything a clinician ordered, or reads as clinical evidence, belongs in 06-results: a sleep study, a cardiac rehabilitation plan, a home blood pressure series a physician asked for. Anything the person is doing for themselves belongs here: a self-directed training block, a food diary, a meditation streak. When self-tracked content becomes clinically relevant, it is not moved; the clinical views simply reach into this folder like any other.
 
 The lifestyle boundary. Folder 19 carries a named sharing boundary, and that boundary is wider than the folder: it also covers self-tracked content held elsewhere in the record, so that a person sharing “my training and recovery data” shares a coherent set rather than one folder’s worth. Like the boundaries on life context and omics, it is excluded from clinical grants by default. A cardiologist receiving a grant does not receive a food diary unless the person names it.
 
@@ -341,6 +347,22 @@ Being told when something better exists. The implementation records how each mod
 
 Rules for the whole folder. It travels with the record and is readable by the person without special software. Files that can be derived are generated, not authored, the same rule as context files (Section 6.1), so they cannot drift. Every change to an environment value is a recorded control event in the access history with the actor and the date, and no environment change is made by an AI on its own. Context files compiled for an AI session (Section 6.1) include the routing map, that model’s own track record, and which task types it may and may not serve, scoped to the acting party’s grant, so any model arriving to work on the record learns what it is permitted to do before it reads any content.
 
+### 2.18 Laboratory Results
+
+Laboratory results are the facts people most often want to see over time, and the facts most often scattered across the most sources: a hospital's EHI export, a patient portal download, a printed report photographed at the kitchen table, a home test kit. The record files them so that the same test from any source lands on one line of one chart. They live in 06-results/labs/, with reproductive health labs in 06-results/labs-reproductive/ behind their own sharing boundary (Section 2).
+
+One result is one entry. Each analyte (hemoglobin A1c, LDL cholesterol, creatinine) is its own entry carrying the standard test code (LOINC), the value with its standard unit (UCUM), the reference range and any high or low flag exactly as the source stated them, the time the specimen was taken (event time) and the time the record learned it (record time, Section 2.5), and the source link (Section 3). Whatever the source wrote is kept beside the standardized form: the test name as printed, the unit as printed, the range as printed. Standardizing never discards the original. One report is one report entry. The panel the source presented (a metabolic panel, a lipid panel, a blood count) is filed as its own entry that points at each of its results, with the performing laboratory and the collection and report times as the source gave them. A single result with no panel still gets a one-result report entry, so views never have to treat it specially.
+
+One series per test, from every source. Because every result carries the same standard code, a value read from a photographed printout and a value from an EHI export join the same series. Standard codes come from the source when it supplies them and from a deterministic lookup when it does not. When the lookup cannot resolve a test name to one code with confidence, the implementation MUST NOT guess: the result is filed with its as-read name, marked as needing the person's confirmation, and kept off every trend until the person confirms the code. A wrong code would put two different tests on one line, which is worse than a gap.
+
+Flags are the source's, not the record's. A high or low marker is filed only when the source stated it. The record computes baselines, trends, and departures over a lab series exactly as it does for device readings (Section 2.6), as computed values that name their calculation and version, and it never asserts cause (Section 2.5). Views render those computed values; they do not recompute them.
+
+Corrections and disagreements. An entry is never edited in place. A correction (a confirmed code, a misread digit fixed, a person's override) is a new entry with its own record time that names the entry it supersedes; the earlier entry stays, marked superseded, so the record can show both what it believed and when it learned better. When two sources report the same test for the same specimen with different values, both are filed with their sources and shown as a disagreement for the person to resolve, and the resolution is recorded (Section 4.2). The record never picks one silently.
+
+How the files are named. A conforming implementation MUST name entry files from their content by deterministic code, never by hand or by a model, and MUST keep every path valid on the filesystems a portable record may sit on. The rules: path components use lowercase ASCII letters, digits, hyphen, underscore, and period only, with no spaces and no two names that differ only by case; a component is at most 100 characters and a full path at most 240; entries are grouped by the year of their event time; an entry file name is the event time (the date, or the date and time to the minute in UTC when the source gives one), the standard code (or unk when unresolved), a short lowercase form of the test name, and the first eight hexadecimal characters of the content hash, so the same import always produces the same name and two results on one day never collide. A report entry uses panel in place of the code. The plain-language twin shares the stem with the .md extension. Example: 06-results/labs/2026/2026-03-14_4548-4_hba1c_9f3a2c1d.json.
+
+Where results come from, in the order they usually arrive: EHI exports and structured provider feeds (already coded), patient portal downloads, photographed or scanned reports read by the extraction capability (Section 3), home test results the person enters, and the device readings of Section 2.6 when a clinician treats them as evidence. Pending lab orders live in 10-care-plans and are checked against existing results of the same test (the repeat check, Section 2.16).
+
 ## 3. How Information Gets In
 
 New material arrives in the inbox from six kinds of source. First and most important, EHI exports: the complete medical record exports federal law entitles you to from every certified provider system, which are how a lifetime of history arrives at once (Section 3.1). Second, structured connections: standard FHIR feeds from provider systems, C-CDA documents, and the visit records that Health Tech Ecosystem providers return to you at check-out in the same format they accept. Third, photographed and scanned documents. Fourth, captured app screens. Fifth, direct device and service streams you have authorized, such as a glucose monitor, blood pressure cuff, or fitness wearable. Sixth, education and developmental support records from schools and related services, which arrive by document or by liaison correspondence and file to folder 18. And alongside all six, you can always simply enter a fact yourself, typed or dictated: a symptom, a home reading, a medication change. A person-entered fact files like any other capture, marked as entered by you, with you as its source.
@@ -357,7 +379,7 @@ The documents the system ingests span everything a life in healthcare generates:
 - Intake and screening forms: questionnaires and assessments, including life-context screenings (which file behind the folder 15 boundary).
 - Education and developmental support: IEPs and EHCPs, 504 plans, school assessments, in-school therapy plans and progress notes, school liaison correspondence (folder 18).
 
-An extraction capability (in the first implementation, SHIRLe’s proprietary AI image analysis capability) reads each captured item and files what it finds. One photographed visit summary might produce a medication change filed under medications, a blood pressure reading filed under observations, a new diagnosis filed under conditions, and a follow-up task filed under care plans. Each of those entries carries a link back to the original photo, along with a note about how confident the system was. Values the system read directly off the page are marked differently from values it estimated, and that distinction stays visible forever. Device data arrives the same way, with the link pointing to the device instead of a document.
+An extraction capability (in the first implementation, SHIRLe’s proprietary AI image analysis capability) reads each captured item and files what it finds. One photographed visit summary might produce a medication change filed under medications, a blood pressure reading filed under results, a new diagnosis filed under conditions, and a follow-up task filed under care plans. Each of those entries carries a link back to the original photo, along with a note about how confident the system was. Values the system read directly off the page are marked differently from values it estimated, and that distinction stays visible forever. Device data arrives the same way, with the link pointing to the device instead of a document.
 
 Extraction also records what did the reading. Every entry an AI produced carries the identity and version of the model that produced it, and where several models participate, the identity of the full model set in use at that moment. This is the same honesty the record already requires of computed values (which name their calculation and version) and of translations (which name their method and version), applied to extraction. It matters because the models working under a record will change over the record’s life: when they do, existing entries stay exactly as filed, still carrying the identity of the model that actually read them, so the question “what read this document” always has an answer.
 
@@ -476,7 +498,9 @@ Conformance summary (5.5.6). An implementation conforms to this section if: it d
 
 ## 6. Works With Any AI
 
-Nothing in this design depends on a particular AI product. The record is folders, readable text, and standard health data, so any capable AI system can work with it, including smaller open-source models that run entirely on a personal computer. Because the access rules are enforced by predictable software rather than by the AI itself, switching to a different AI changes only how good the answers are, never who can see what. The person can choose a fully private local AI for sensitive questions and a more powerful connected AI for complex ones, and both work from the identical record. The time structure in Section 2.5 is part of what makes the smallest AIs workable: a question about your current medications loads the handful of active entries, not decades of history, so even a modest computer holds what the question actually needs.
+Nothing in this design depends on a particular AI product. The record is folders, readable text, and standard health data, so any capable AI system can work with it, including smaller open-weight models that run entirely on a personal computer. Because the access rules are enforced by predictable software rather than by the AI itself, switching to a different AI changes only how good the answers are, never who can see what. The person can choose a fully private local AI for sensitive questions and a more powerful connected AI for complex ones, and both work from the identical record. The time structure in Section 2.5 is part of what makes the smallest AIs workable: a question about your current medications loads the handful of active entries, not decades of history, so even a modest computer holds what the question actually needs.
+
+Every AI reaches the record through one boundary, which this specification calls the healthcare harness: the software layer that sits between any model and the record and enforces the record's rules regardless of which model is working. The harness hands a model its context (Section 6.1) scoped to the acting party's grant; it is the only path by which a model reads entries, through a query layer rather than the files themselves; it applies the permissions of Section 4 as routing, so a model never sees a category the grant does not name; it holds every write behind the approval gate and the trust record of Section 7; and it writes every action to the access history. Because the harness belongs to the record and not to the model, a person can bring whichever model they choose, from a small open-weight model on their own computer to a connected service, and the record is governed the same way. A conforming implementation MUST provide this boundary and MUST NOT offer any model a path around it. How an implementation builds the harness is not standardized; what it must enforce is.
 
 ### 6.1 Context Files: How an AI Learns the Record
 
@@ -575,7 +599,19 @@ Computed value: a number produced by a fixed, named calculation over recorded da
 
 Model identity: the recorded name and version of the AI model, or model set, that produced an extracted entry, kept permanently with the entry even after the models under the record change (Section 3).
 
-Event time and record time: the two clocks every entry keeps: when something was true, and when the record learned it. (Technical term: bi-temporality.)
+Event time and record time: the two clocks every entry keeps: when something was true, and when the record learned it. Record time is written in the element named in Section 2.5. (Technical term: bi-temporality.)
+
+Record-time element: the custom FHIR field (an extension, named https://precisionhealthventures.com/fhir/StructureDefinition/pshr-record-time) in which every entry carries record time, set once when the entry is filed and never changed (Section 2.5).
+
+LOINC: Logical Observation Identifiers Names and Codes, the standard code system that identifies laboratory tests and other measurements, so the same test is recognized whatever a laboratory calls it (Section 2.18).
+
+UCUM: the Unified Code for Units of Measure, the standard way of writing a unit (mg/dL, mmol/L) so values from different sources can be compared (Section 2.18).
+
+Panel: a group of laboratory tests ordered and reported together (a metabolic panel, a lipid panel, a blood count); filed as one report entry that points at each of its results (Section 2.18).
+
+Device Readings: the subfolder of 06-results (device-readings/) holding continuous data from monitors and wearables, stored as daily and weekly blocks with summaries on top (Section 2.6).
+
+Healthcare harness: the software boundary between any model and the record that supplies the model's context, enforces permissions as routing, holds writes behind the approval gate, and logs every action; it belongs to the record, not to the model (Section 6).
 
 Source link: the connection from any entry in your record back to the original document, photo, or device reading it came from. (Technical term: provenance.)
 
@@ -635,7 +671,7 @@ Post-quantum cryptography: encryption and signature algorithms designed to resis
 
 # Appendix B: The Record at a Glance
 
-The complete folder organization in one table. Every folder is described in Part I; the boundaries named here are detailed in Sections 2.7, 2.8, 2.15, and 4.3.
+The complete folder organization in one table. Every folder is described in Part I; the boundaries named here are detailed in Sections 2.7, 2.8, 2.15, 2.18, and 4.3.
 
 | Folder | What it holds |
 | :-: | :-: |
@@ -645,7 +681,7 @@ The complete folder organization in one table. Every folder is described in Part
 | 03-conditions | Diagnoses and allergies |
 | 04-medications | Prescriptions, with vitamins and supplements kept separate |
 | 05-immunizations | Vaccines |
-| 06-observations | Lab results, vitals, device and wearable data, functional status, implants list |
+| 06-results | Lab results, vitals, device readings, functional status, questionnaires, and the Implanted Devices list, in subfolders labs, labs-reproductive (own boundary), vitals, device-readings, implanted-devices (Section 2.18) |
 | 07-procedures | Surgeries and procedures |
 | 08-encounters | Visits and hospital stays |
 | 09-documents | Original scans, photos, files, and clinician notes: the permanent evidence layer |
@@ -675,12 +711,12 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Allergy: 03-conditions.
 - Ambulance and emergency transport record: 08-encounters; bill to 11-financial.
 - Appointment, upcoming: 10-care-plans (expected next).
-- Assessment, developmental or psychological (clinic): 09-documents (original); findings to 03-conditions and 06-observations.
+- Assessment, developmental or psychological (clinic): 09-documents (original); findings to 03-conditions and 06-results.
 - Assessment, school: 18-education-support.
 - Audiogram: 17-vision-hearing-dental.
 - Bill, medical: 11-financial; linked to its condition for the condition view.
-- Biomarker panel: 06-observations, one coded entry per marker.
-- Blood pressure reading: 06-observations (home device stream or single entry); a series a physician asked you to keep stays clinical, in observations.
+- Biomarker panel: 06-results/labs, one coded entry per marker and one report entry for the panel (Section 2.18).
+- Blood pressure reading: 06-results/vitals (single entry) or 06-results/device-readings (home device series); a series a physician asked you to keep stays clinical, in 06-results.
 - Body-system view (cardiovascular, metabolic, and so on): not a folder: a view compiled across the whole record on demand (Section 2.14).
 - Care plan: 10-care-plans.
 - Caregiver authorization: not a filed document: a named permission in the record’s access rules (Section 4); any legal papers behind it file to 13-directives.
@@ -690,9 +726,10 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Complete medical record export (EHI export): arrives in 00-inbox; archive preserved in 09-documents; contents fan out.
 - Contact lens prescription: 17-vision-hearing-dental.
 - Context file (CONTEXT.md and folder guides): not a filed document: generated fresh from the record for each session, scoped to the viewer’s permission (Section 6.1).
-- Continuous glucose monitor (CGM) data: 06-observations (stream blocks with summaries).
+- Continuous glucose monitor (CGM) data: 06-results/device-readings (daily and weekly blocks with summaries).
 - Custody or guardianship papers: 13-directives; the authority itself lives as a recorded control role in the record’s permissions (Section 2.12).
 - Dental chart or treatment plan: 17-vision-hearing-dental.
+- Device readings (continuous data from a monitor or wearable): 06-results/device-readings (Section 2.6).
 - Diagnosis: 03-conditions.
 - Diary or personal note: 12-journal.
 - Discharge instructions: 09-documents (original); follow-ups to 10-care-plans as tasks (Section 2.16).
@@ -701,32 +738,33 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Emergency summary: not a folder: a view compiled on demand under its own access rule (Section 4.1).
 - Explanation of benefits (EOB): 11-financial; cost links feed the condition view.
 - Eyeglass prescription: 17-vision-hearing-dental.
-- Falls and near-falls: 06-observations (functional status, Section 2.11).
+- Falls and near-falls: 06-results (functional status, Section 2.11).
 - Family member’s health history: 14-family-history.
-- Fitness and workout data: 19-lifestyle when self-directed; 06-observations when a clinician ordered or reads it (Section 2.15).
+- Fitness and workout data: 19-lifestyle when self-directed; 06-results/device-readings when a clinician ordered or reads it (Section 2.15).
 - Food or nutrition log: 19-lifestyle (events; from app screens or entry).
 - Guardianship, adult: 13-directives (the papers); the authority itself is a permission (Section 4).
-- Hearing aid records and settings: 17-vision-hearing-dental; the device also listed with implants (Section 2.4).
-- Home test result (over the counter): 06-observations, marked person-entered or device-read.
+- Hearing aid records and settings: 17-vision-hearing-dental; the device also listed with implanted devices (Section 2.4).
+- Home test result (over the counter): 06-results/labs, marked person-entered or device-read.
 - Hospital stay: 08-encounters.
 - IEP or EHCP: 18-education-support.
-- Imaging report (X-ray, MRI, CT): 09-documents (original report); findings to 06-observations.
+- Imaging report (X-ray, MRI, CT): 09-documents (original report); findings to 06-results.
 - Immunization record: 05-immunizations.
-- Implanted device: 06-observations (implants list, Section 2.4).
+- Implanted device: 06-results/implanted-devices (Section 2.4).
 - Insurance card: 01-demographics (identity) and 09-documents (image).
 - Insurance claim: 11-financial.
 - Intake or screening questionnaire: 09-documents (original); life-context answers to 15-life-context.
 - Journal entry: 12-journal.
 - Jurisdiction setting and active law-pinned set: _environment, with the history of every change (Section 2.17).
-- Lab report, printed or PDF: 09-documents (original); results to 06-observations.
-- Lab result: 06-observations.
+- Lab panel (metabolic, lipid, blood count): 06-results/labs, one report entry pointing at its results (Section 2.18).
+- Lab report, printed or PDF: 09-documents (original); results to 06-results/labs, one entry per result and one report entry per panel (Section 2.18).
+- Lab result: 06-results/labs (Section 2.18); reproductive health labs to 06-results/labs-reproductive.
 - Living will: 13-directives.
 - Meal logged in an app: 19-lifestyle (event, with its foods); when it annotates a clinical stream such as a glucose curve, the link is kept with that stream (Section 2.6).
 - Medication bottle label (photo): 09-documents (image); medication to 04-medications.
 - Medication, current or past: 04-medications.
 - Microbiome test result: 16-omics.
 - Mindfulness or meditation session: 19-lifestyle.
-- Mobility equipment (wheelchair, walker): 06-observations (functional status and device list).
+- Mobility equipment (wheelchair, walker): 06-results (functional status and device list).
 - Model registry (which AI models this record can use): _environment (Section 2.17).
 - Order, pending (lab, imaging, referral): 10-care-plans; checked against recent results of the same test and flagged where one exists (Section 2.16).
 - Operative report: 09-documents (original); procedure to 07-procedures.
@@ -740,22 +778,23 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Redemption receipt: not a filed document: the person’s copy lives in the access history, and the recipient keeps their own copy as proof the disclosure was authorized (Section 5.5).
 - Referral: 10-care-plans.
 - Regenerative or experimental treatment: 07-procedures or 04-medications as applicable, full provenance even without a code (Section 3).
-- Rehabilitation or physical therapy log: 06-observations; plan to 10-care-plans.
+- Rehabilitation or physical therapy log: 06-results; plan to 10-care-plans.
+- Reproductive health lab (pregnancy, fertility, STI screening): 06-results/labs-reproductive, behind its own sharing boundary (Section 2).
 - Request for disclosure: not a filed document: recorded in the access history with its outcome; confers no access by itself and expires if unanswered (Section 5.5).
 - School liaison correspondence: 18-education-support.
 - School therapy plan and progress: 18-education-support.
 - Screenshot of a health app: 09-documents (image); decomposed per Section 2.6.
-- Sleep data: 19-lifestyle when self-tracked; 09-documents and 06-observations for a clinical sleep study.
+- Sleep data: 19-lifestyle when self-tracked; 09-documents and 06-results for a clinical sleep study.
 - Social needs screening (housing, food, transportation): 15-life-context, behind its boundary.
 - Substance use disorder treatment record: files in its normal domain folders but is held behind the legally required boundary (Section 4.3).
 - Supplement or vitamin: 04-medications (kept separate from prescriptions).
 - Task or to-do (yours, a caregiver’s, or one the record proposed): 10-care-plans; done tasks stay, marked complete with the date and who marked them (Section 2.16).
-- Symptom you noticed: 12-journal (your words) or 06-observations (person-entered fact).
+- Symptom you noticed: 12-journal (your words) or 06-results (person-entered fact).
 - Therapy goal (developmental, speech, occupational, physical): 10-care-plans (goal entries, Section 2.11).
 - Training log or workout block, self-directed: 19-lifestyle.
 - Translation of an entry: not a separate fact: a derived layer kept with the original entry (Section 5.3).
 - Trustee or break-glass designation: not a filed document: a signed, portable authorization in the record’s permissions (Section 5.4); any legal papers behind it file to 13-directives.
 - Vaccination card (photo): 09-documents (image); doses to 05-immunizations.
 - Visit: 08-encounters.
-- Vital signs: 06-observations.
-- Weight: 06-observations.
+- Vital signs: 06-results/vitals.
+- Weight: 06-results/vitals.
