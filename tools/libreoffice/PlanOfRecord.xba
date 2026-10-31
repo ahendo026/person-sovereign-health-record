@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="PlanOfRecord" script:language="StarBasic">&apos; Plan-of-record release helper. Installed into the LibreOffice user
+&apos; profile by tools/docx-to-pdf.sh. Opens a .docx, refreshes every
+&apos; document index (the table of contents pandoc writes as a field) and
+&apos; exports the result as PDF. A headless --convert-to leaves the field
+&apos; unrefreshed, so the table of contents comes out empty.
+
+Sub DocxToPdf(sIn As String, sOut As String)
+    Dim oDoc As Object
+    Dim args(0) As New com.sun.star.beans.PropertyValue
+    args(0).Name = &quot;Hidden&quot;
+    args(0).Value = True
+    oDoc = StarDesktop.loadComponentFromURL(ConvertToURL(sIn), &quot;_blank&quot;, 0, args())
+
+    Dim oIndexes As Object
+    Dim i As Integer
+    Dim pass As Integer
+    oIndexes = oDoc.getDocumentIndexes()
+    &apos; Two passes: filling the index changes pagination, which changes
+    &apos; the page numbers the index must show.
+    For pass = 1 To 2
+        For i = 0 To oIndexes.getCount() - 1
+            oIndexes.getByIndex(i).update()
+        Next i
+        oDoc.refresh()
+    Next pass
+
+    Dim fargs(0) As New com.sun.star.beans.PropertyValue
+    fargs(0).Name = &quot;FilterName&quot;
+    fargs(0).Value = &quot;writer_pdf_Export&quot;
+    oDoc.storeToURL(ConvertToURL(sOut), fargs())
+    oDoc.close(True)
+End Sub
+</script:module>

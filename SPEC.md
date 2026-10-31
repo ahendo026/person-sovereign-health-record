@@ -1,8 +1,8 @@
 # Person-Sovereign Health Record Architecture
 
-**Specification v0.21 (Public Release Candidate)**  
+**Specification v0.22 (Public Release Candidate)**  
 First implementation: SHIRLe Health / HealthDigits  
-Precision Health Ventures, October 25, 2026  
+Precision Health Ventures, October 31, 2026  
 License: CC BY 4.0 (specification text). Patent pending.
 
 ## Table of Contents
@@ -46,6 +46,7 @@ License: CC BY 4.0 (specification text). Patent pending.
 - Part III: Intelligence
   - 6. Works With Any AI
     - 6.1 Context Files: How an AI Learns the Record
+    - 6.2 The Precision Profile and Governed Learning
   - 7. What the AI Is Allowed to Do on Its Own
     - 7.1 What Requires Approval
     - 7.2 The Approval Gate and the Trust Record
@@ -62,6 +63,8 @@ License: CC BY 4.0 (specification text). Patent pending.
 This specification is organized in four parts. Part I (Sections 1 to 3) describes the record itself: what it is, how it is organized, and how information gets into it, including the complete medical record exports (EHI exports) that federal law entitles every person to and that this architecture is built to receive. Part II (Sections 4 and 5) covers control and protection: who can see what, and how the record is protected wherever it lives. Part III (Sections 6 and 7) covers intelligence: how any AI can work with the record and what the AI is allowed to do on its own. Part IV (Sections 8 and 9) places the architecture in its program and federal context and names what is deliberately deferred. Appendices define terms, show the record at a glance, and index where things go.
 
 **Document history:**
+
+v0.22: New Section 6.2: the Precision Profile, a derived working picture of one person's health state that a conforming implementation computes by deterministic code from filed entries, with every value naming its source entries, regenerable from the record tree, computed where the record lives and leaving custody only under a grant, and excluding exogenous data in this version; and Governed Learning, comparison across profiles only under an explicit per-purpose authorization recorded in the consent engine, stated as direction, with trial matching for research as its first application and no comparison method standardized in this version; no model holds profile state. Section 6 points to the new section. Section 2.17 cross-references Section 5.1 at its first use of sealing. Section 2.18 lists the seven extension names used beside the record-time element under the PHV base URL. Appendix A adds Precision Profile, Governed Learning, and sealed record. Built on v0.21 of October 25, 2026.
 
 v0.21: Folder 06 renamed from 06-observations to 06-results, with five named subfolders: labs, labs-reproductive (its own sharing boundary), vitals, device-readings (Device Readings, the continuous data of Section 2.6), and implanted-devices (Implanted Devices, formerly the implants list); the rename carries through Sections 2.1, 2.4, 2.6, 2.10, 2.11, 2.15, and 3, Appendix B, and Appendix C. New Section 2.18: laboratory results (one entry per result and one report entry per panel, standard codes and units with the as-read values retained, one series per test across every source, the abstain rule for unresolved codes, the correction rule, and the file naming and path constraints a conforming implementation follows). Section 2.5 names the record-time element in conformance language. Section 2 states that originals and filed entries are write-once. Section 6 adds the healthcare harness as a defined term and says open-weight where it said open-source. Terms added to Appendix A. Built on v0.20 of September 29, 2026.
 
@@ -328,7 +331,7 @@ None of this is clinical advice. The record shows what exists, what is pending, 
 
 ### 2.17 The Environment Folder: How This Copy Is Set Up
 
-The governance folder holds the rules: who may see what, and what the AI may do. A record also carries facts about how this particular copy is set up, and those are not rules. Which jurisdiction governs it. What age of majority it uses. Which AI model answers questions and which one reads photographed documents. Which cryptographic algorithms seal it. The environment folder (_environment/ at the record root) holds these facts, so that the rulebook stays a rulebook and the setup travels with the record wherever it goes. The test for placement is simple: a line that answers “how is this record set up” belongs in _environment; a line that answers “who is allowed to do what” belongs in _governance. The access history stays in _governance.
+The governance folder holds the rules: who may see what, and what the AI may do. A record also carries facts about how this particular copy is set up, and those are not rules. Which jurisdiction governs it. What age of majority it uses. Which AI model answers questions and which one reads photographed documents. Which cryptographic algorithms seal it (Section 5.1). The environment folder (_environment/ at the record root) holds these facts, so that the rulebook stays a rulebook and the setup travels with the record wherever it goes. The test for placement is simple: a line that answers “how is this record set up” belongs in _environment; a line that answers “who is allowed to do what” belongs in _governance. The access history stays in _governance.
 
 What the folder holds. Each item is a readable file paired with a machine-readable form, the same pairing rule as the record’s entries:
 
@@ -362,6 +365,8 @@ Corrections and disagreements. An entry is never edited in place. A correction (
 How the files are named. A conforming implementation MUST name entry files from their content by deterministic code, never by hand or by a model, and MUST keep every path valid on the filesystems a portable record may sit on. The rules: path components use lowercase ASCII letters, digits, hyphen, underscore, and period only, with no spaces and no two names that differ only by case; a component is at most 100 characters and a full path at most 240; entries are grouped by the year of their event time; an entry file name is the event time (the date, or the date and time to the minute in UTC when the source gives one), the standard code (or unk when unresolved), a short lowercase form of the test name, and the first eight hexadecimal characters of the content hash, so the same import always produces the same name and two results on one day never collide. A report entry uses panel in place of the code. The plain-language twin shares the stem with the .md extension. Example: 06-results/labs/2026/2026-03-14_4548-4_hba1c_9f3a2c1d.json.
 
 Where results come from, in the order they usually arrive: EHI exports and structured provider feeds (already coded), patient portal downloads, photographed or scanned reports read by the extraction capability (Section 3), home test results the person enters, and the device readings of Section 2.6 when a clinician treats them as evidence. Pending lab orders live in 10-care-plans and are checked against existing results of the same test (the repeat check, Section 2.16).
+
+Extension names. Entries filed under this section carry custom FHIR fields (extensions) named under the base https://precisionhealthventures.com/fhir/StructureDefinition/, beside the record-time element of Section 2.5 (pshr-record-time). The seven names are: pshr-replaces (the entry a correction supersedes); pshr-source (the exact source of an entry: the preserved original, the device, or the person); pshr-extraction (the model, manifest, and configuration that read a value, present only when a model took part); pshr-read-class (whether a value was directly read, estimated, or computed); pshr-confidence (the reading confidence, present only when a model took part); pshr-needs-confirmation (set when a code was not resolved or the confidence fell below the implementation's threshold); and pshr-calculation (the name and version of the calculation that produced a computed value). These names are permanent: they appear in every entry written under them and are used as written by every conforming implementation.
 
 ## 3. How Information Gets In
 
@@ -500,7 +505,7 @@ Conformance summary (5.5.6). An implementation conforms to this section if: it d
 
 Nothing in this design depends on a particular AI product. The record is folders, readable text, and standard health data, so any capable AI system can work with it, including smaller open-weight models that run entirely on a personal computer. Because the access rules are enforced by predictable software rather than by the AI itself, switching to a different AI changes only how good the answers are, never who can see what. The person can choose a fully private local AI for sensitive questions and a more powerful connected AI for complex ones, and both work from the identical record. The time structure in Section 2.5 is part of what makes the smallest AIs workable: a question about your current medications loads the handful of active entries, not decades of history, so even a modest computer holds what the question actually needs.
 
-Every AI reaches the record through one boundary, which this specification calls the healthcare harness: the software layer that sits between any model and the record and enforces the record's rules regardless of which model is working. The harness hands a model its context (Section 6.1) scoped to the acting party's grant; it is the only path by which a model reads entries, through a query layer rather than the files themselves; it applies the permissions of Section 4 as routing, so a model never sees a category the grant does not name; it holds every write behind the approval gate and the trust record of Section 7; and it writes every action to the access history. Because the harness belongs to the record and not to the model, a person can bring whichever model they choose, from a small open-weight model on their own computer to a connected service, and the record is governed the same way. A conforming implementation MUST provide this boundary and MUST NOT offer any model a path around it. How an implementation builds the harness is not standardized; what it must enforce is.
+Every AI reaches the record through one boundary, which this specification calls the healthcare harness: the software layer that sits between any model and the record and enforces the record's rules regardless of which model is working. The harness hands a model its context (Section 6.1) scoped to the acting party's grant; it is the only path by which a model reads entries, through a query layer rather than the files themselves; it applies the permissions of Section 4 as routing, so a model never sees a category the grant does not name; it holds every write behind the approval gate and the trust record of Section 7; and it writes every action to the access history. Because the harness belongs to the record and not to the model, a person can bring whichever model they choose, from a small open-weight model on their own computer to a connected service, and the record is governed the same way. A conforming implementation MUST provide this boundary and MUST NOT offer any model a path around it. How an implementation builds the harness is not standardized; what it must enforce is. Section 6.2 defines the Precision Profile, the derived working picture of one person's health state that a model reasons over instead of the full record, and states the direction for learning across profiles under the person's authorization.
 
 ### 6.1 Context Files: How an AI Learns the Record
 
@@ -511,6 +516,18 @@ The record-level manifest already lives in the tree: CONTEXT.md at the record ro
 Each folder SHOULD additionally carry its own context file: what the folder holds, the entry conventions in use there, how to read its markings, the temporal semantics that apply, and which operations are appropriate (for example, that journal text is never rewritten, or that folder 15 is locked to suggestion-only). An AI loads a folder’s context when a question takes it there, and not before, which is the same progressive approach that keeps small local models workable against a large record (Section 6).
 
 Two rules keep context files honest. First, they are generated, not authored: like the plain-language twins, context files are compiled from the tree, the governance folder, and the environment folder (Section 2.17) by deterministic code, so they can never drift from what the record actually contains and permits, and they are fully regenerable. Second, they are consent-scoped projections: a context file is compiled per session against the acting party’s grant, and it MUST NOT reveal the existence, names, or contents of categories outside that grant. Law-pinned classes and boundary folders never appear in a context file compiled for a party whose grant does not name them. The map a viewer receives shows only the territory they are permitted to enter.
+
+### 6.2 The Precision Profile and Governed Learning
+
+The Precision Profile. The Precision Profile is a continuously updated working picture of one person's health state, derived from the clinical and behavioral data in their record, that a model can reason over without touching the full record each time. It is what makes individualized analysis cheap rather than hand-built.
+
+A conforming implementation that offers a profile MUST derive it by deterministic code from filed entries, never by a model. Every profile value MUST name the identifiers of the entries it was computed from, so that any value can be traced to its sources exactly as a computed value of Section 2.6 can. The profile is a derived store: like the plain-language twins and views of Section 2 and the context files of Section 6.1, it is regenerable from the record tree, and deleting it and rebuilding it from the entries MUST yield the same profile. The profile is computed where the record lives, and it leaves the record's custody only under a grant (Section 4), on the same terms as any other part of the record. In this version the profile excludes exogenous data: air quality, weather, and neighborhood and social factors are not profile inputs, and the life-context facts of Section 2.7 enter the profile only as entries the person's record already holds.
+
+Governed Learning. Governed Learning is the ability, with the person's explicit permission, to compare one profile against many others to find clinically meaningful patterns, through privacy-preserving analysis under the person's authorization, governed by Earned Autonomy (the governance of Section 7, which grants a model only the authority it has demonstrated it can carry).
+
+Comparison across profiles happens only under an explicit per-purpose authorization recorded in the consent engine (Section 4); a general grant never covers it. Governed Learning is stated here as direction, not as a specified capability. Its first application is trial matching for research, in which eligibility is screened against profiles under that authorization; it is never clinical decision support. This specification does not standardize the comparison method in this version.
+
+No model holds profile state: a model reads the profile through the healthcare harness as context (Section 6.1), the environment folder records which model serves which task (Section 2.17), and what a model may do with what it reads is governed by Section 7.
 
 ## 7. What the AI Is Allowed to Do on Its Own
 
@@ -625,6 +642,10 @@ Emergency summary: the small set of critical facts you choose in advance to be o
 
 Context file: a small generated guide an AI reads before touching content: the record-level map (CONTEXT.md) and the per-folder guides, compiled from the record itself and scoped to what the reader’s permission allows (Section 6.1).
 
+Precision Profile: a continuously updated working picture of one person's health state, derived by deterministic code from the entries in their record, that a model can reason over without reading the full record each time; every value names the entries it was computed from, and the profile is regenerable from the record tree (Section 6.2).
+
+Governed Learning: the comparison of one person's profile against many others to find clinically meaningful patterns, done only as privacy-preserving analysis under the person's explicit per-purpose authorization and governed by Earned Autonomy; stated as direction in this version, with trial matching for research as its first application (Section 6.2).
+
 42 CFR Part 2: the federal confidentiality regulation for substance use disorder treatment records, stricter than ordinary health privacy law; full compliance became enforceable in February 2026.
 
 TEFCA: the Trusted Exchange Framework and Common Agreement, the federal framework connecting health information networks so records can move between systems nationwide.
@@ -632,6 +653,8 @@ TEFCA: the Trusted Exchange Framework and Common Agreement, the federal framewor
 Earned independence: the principle that the AI begins with minimal freedom to act and gains more only through a demonstrated track record, with some actions permanently requiring approval. (Framework: Earned Autonomy.)
 
 Responsible AI: the discipline of building AI systems that are transparent, accountable, and under meaningful human control. Sometimes abbreviated RAI; this document uses the full phrase.
+
+Sealed record: a record stored in a form the storage holder cannot read because every entry is encrypted with keys only the person holds, distinct from encryption at rest, which the host can undo; sealed category by category, so each category can be granted on its own. "Sealing" is the act; "unsealing" is reading under a granted key (Section 5.1).
 
 Root key: the single secret from which access to the full record derives; generated under the person’s control and never held whole by any host (Section 5.4).
 
