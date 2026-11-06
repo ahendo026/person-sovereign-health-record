@@ -2,6 +2,10 @@
 
 All notable changes to the Person-Sovereign Health Record Architecture. The document history inside the specification is the authoritative record; this file mirrors it.
 
+## v0.23
+
+The reproductive health boundary widened from laboratory results to every reproductive health entry an export or capture brings. Folders 03-conditions, 04-medications, and 08-encounters each gain a subfolder reproductive/ for reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections), held behind the same boundary as 06-results/labs-reproductive: a permission that names reproductive health opens all four, and no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule. Section 2, Appendix B, and Appendix C state the rule. Built on v0.22 of October 31, 2026.
+
 ## v0.22
 
 New Section 6.2: the Precision Profile, a derived working picture of one person's health state that a conforming implementation computes by deterministic code from filed entries, with every value naming its source entries, regenerable from the record tree, computed where the record lives and leaving custody only under a grant, and excluding exogenous data in this version; and Governed Learning, comparison across profiles only under an explicit per-purpose authorization recorded in the consent engine, stated as direction, with trial matching for research as its first application and no comparison method standardized in this version; no model holds profile state. Section 6 points to the new section. Section 2.17 cross-references Section 5.1 at its first use of sealing. Section 2.18 lists the seven extension names used beside the record-time element under the PHV base URL. Appendix A adds Precision Profile, Governed Learning, and sealed record. Built on v0.21 of October 25, 2026.

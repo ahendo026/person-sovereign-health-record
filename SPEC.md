@@ -1,8 +1,8 @@
 # Person-Sovereign Health Record Architecture
 
-**Specification v0.22 (Public Release Candidate)**  
+**Specification v0.23 (Public Release Candidate)**  
 First implementation: SHIRLe Health / HealthDigits  
-Precision Health Ventures, October 31, 2026  
+Precision Health Ventures, November 5, 2026  
 License: CC BY 4.0 (specification text). Patent pending.
 
 ## Table of Contents
@@ -63,6 +63,8 @@ License: CC BY 4.0 (specification text). Patent pending.
 This specification is organized in four parts. Part I (Sections 1 to 3) describes the record itself: what it is, how it is organized, and how information gets into it, including the complete medical record exports (EHI exports) that federal law entitles every person to and that this architecture is built to receive. Part II (Sections 4 and 5) covers control and protection: who can see what, and how the record is protected wherever it lives. Part III (Sections 6 and 7) covers intelligence: how any AI can work with the record and what the AI is allowed to do on its own. Part IV (Sections 8 and 9) places the architecture in its program and federal context and names what is deliberately deferred. Appendices define terms, show the record at a glance, and index where things go.
 
 **Document history:**
+
+v0.23: The reproductive health boundary widened from laboratory results to every reproductive health entry an export or capture brings. Folders 03-conditions, 04-medications, and 08-encounters each gain a subfolder reproductive/ for reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections), held behind the same boundary as 06-results/labs-reproductive: a permission that names reproductive health opens all four, and no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule. Section 2, Appendix B, and Appendix C state the rule. Built on v0.22 of October 31, 2026.
 
 v0.22: New Section 6.2: the Precision Profile, a derived working picture of one person's health state that a conforming implementation computes by deterministic code from filed entries, with every value naming its source entries, regenerable from the record tree, computed where the record lives and leaving custody only under a grant, and excluding exogenous data in this version; and Governed Learning, comparison across profiles only under an explicit per-purpose authorization recorded in the consent engine, stated as direction, with trial matching for research as its first application and no comparison method standardized in this version; no model holds profile state. Section 6 points to the new section. Section 2.17 cross-references Section 5.1 at its first use of sealing. Section 2.18 lists the seven extension names used beside the record-time element under the PHV base URL. Appendix A adds Precision Profile, Governed Learning, and sealed record. Built on v0.21 of October 25, 2026.
 
@@ -149,14 +151,16 @@ health-record/
  01-demographics/ who you are, contact details, insurance identity
  02-care-team/ your doctors, clinics, providers, and the
  caregivers and family members on your team
- 03-conditions/ diagnoses and allergies; dental kept separate
- 04-medications/ prescriptions; vitamins and supplements kept separate
+ 03-conditions/ diagnoses and allergies; dental kept separate;
+ subfolder reproductive/
+ 04-medications/ prescriptions; vitamins and supplements kept separate;
+ subfolder reproductive/
  05-immunizations/ vaccines
  06-results/ lab results, vitals, device readings, questionnaires;
  subfolders labs/, labs-reproductive/, vitals/,
  device-readings/, implanted-devices/ (devices in your body)
  07-procedures/ surgeries and procedures
- 08-encounters/ visits and hospital stays
+ 08-encounters/ visits and hospital stays; subfolder reproductive/
  09-documents/ original scans, photos, files, clinician notes
  10-care-plans/ treatment plans, goals, referrals, pending orders
  11-financial/ insurance claims and billing
@@ -177,7 +181,8 @@ health-record/
 
 Organizational choices that matter to the person who owns the record:
 
-- Categories you might want to share separately get their own folder. Vaccine records, reproductive health labs, behavioral health content, dental records, your journal, and your family’s history are kept structurally apart, so you can share one without exposing the others.
+- Categories you might want to share separately get their own folder. Vaccine records, reproductive health, behavioral health content, dental records, your journal, and your family’s history are kept structurally apart, so you can share one without exposing the others.
+- Reproductive health has one boundary across the record. Reproductive health labs file in 06-results/labs-reproductive, and reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections) file in the reproductive/ subfolder of 03-conditions, 04-medications, and 08-encounters. A permission that names reproductive health opens all four; no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule over the entry's codes, and MUST NOT let an entry outside the boundary name an entry inside it by path.
 - The inbox shows what is waiting. Anything sitting in 00-inbox has been captured (a photo of a visit summary, or a visit record a provider sent back after check-in) but not yet filed. You can see the system’s to-do list just by looking.
 - Originals are never thrown away. Folder 09 keeps every scan and photo permanently, so any entry in the record can always be checked against the document it came from. A conforming implementation MUST provide no operation that overwrites or deletes an original in folder 09 or a filed entry; a correction is a new entry (Section 2.5), and removal where the law or the person requires it is an administrative action recorded in the access history.
 - The record looks forward as well as back. Referrals that have been placed but not yet scheduled, and orders that are pending, live in 10-care-plans, so the question “what is supposed to happen next” always has an answer.
@@ -701,12 +706,12 @@ The complete folder organization in one table. Every folder is described in Part
 | 00-inbox | Items captured but not yet filed; every new arrival lands here first |
 | 01-demographics | Who you are: identity, contact details, insurance identity |
 | 02-care-team | Your doctors, clinics, providers, and the people who care for you, each with a named role |
-| 03-conditions | Diagnoses and allergies |
-| 04-medications | Prescriptions, with vitamins and supplements kept separate |
+| 03-conditions | Diagnoses and allergies; reproductive health conditions in subfolder reproductive (own boundary) |
+| 04-medications | Prescriptions, with vitamins and supplements kept separate; reproductive health medications in subfolder reproductive (own boundary) |
 | 05-immunizations | Vaccines |
 | 06-results | Lab results, vitals, device readings, functional status, questionnaires, and the Implanted Devices list, in subfolders labs, labs-reproductive (own boundary), vitals, device-readings, implanted-devices (Section 2.18) |
 | 07-procedures | Surgeries and procedures |
-| 08-encounters | Visits and hospital stays |
+| 08-encounters | Visits and hospital stays; reproductive health visits in subfolder reproductive (own boundary) |
 | 09-documents | Original scans, photos, files, and clinician notes: the permanent evidence layer |
 | 10-care-plans | Treatment plans, goals, referrals, pending orders, what happens next |
 | 11-financial | Insurance claims, explanations of benefits, and billing |
@@ -803,6 +808,7 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Regenerative or experimental treatment: 07-procedures or 04-medications as applicable, full provenance even without a code (Section 3).
 - Rehabilitation or physical therapy log: 06-results; plan to 10-care-plans.
 - Reproductive health lab (pregnancy, fertility, STI screening): 06-results/labs-reproductive, behind its own sharing boundary (Section 2).
+- Reproductive health condition, medication, or visit (pregnancy, contraception, fertility, prenatal or postpartum care, STI): 03-conditions/reproductive, 04-medications/reproductive, or 08-encounters/reproductive, behind the same boundary as reproductive health labs (Section 2).
 - Request for disclosure: not a filed document: recorded in the access history with its outcome; confers no access by itself and expires if unanswered (Section 5.5).
 - School liaison correspondence: 18-education-support.
 - School therapy plan and progress: 18-education-support.
