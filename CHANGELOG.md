@@ -2,6 +2,10 @@
 
 All notable changes to the Person-Sovereign Health Record Architecture. The document history inside the specification is the authoritative record; this file mirrors it.
 
+## v0.24
+
+The reproductive health boundary now covers procedures. Folder 07-procedures gains a subfolder reproductive/ for reproductive health procedures, held behind the same boundary as the other four places: a permission that names reproductive health opens all five, and no broad grant opens any of them. Section 6 adds the rule for a person asking a model about their own record: entries behind a sharing boundary are left out unless the person turns them on for that conversation, clears a warning that says where the question will be processed, and the action is written to the access history. Section 2, Section 6, Appendix B, and Appendix C state the rules. Built on v0.23 of November 5, 2026.
+
 ## v0.23
 
 The reproductive health boundary widened from laboratory results to every reproductive health entry an export or capture brings. Folders 03-conditions, 04-medications, and 08-encounters each gain a subfolder reproductive/ for reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections), held behind the same boundary as 06-results/labs-reproductive: a permission that names reproductive health opens all four, and no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule. Section 2, Appendix B, and Appendix C state the rule. Built on v0.22 of October 31, 2026.

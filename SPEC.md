@@ -1,8 +1,8 @@
 # Person-Sovereign Health Record Architecture
 
-**Specification v0.23 (Public Release Candidate)**  
+**Specification v0.24 (Public Release Candidate)**  
 First implementation: SHIRLe Health / HealthDigits  
-Precision Health Ventures, November 5, 2026  
+Precision Health Ventures, November 17, 2026  
 License: CC BY 4.0 (specification text). Patent pending.
 
 ## Table of Contents
@@ -63,6 +63,8 @@ License: CC BY 4.0 (specification text). Patent pending.
 This specification is organized in four parts. Part I (Sections 1 to 3) describes the record itself: what it is, how it is organized, and how information gets into it, including the complete medical record exports (EHI exports) that federal law entitles every person to and that this architecture is built to receive. Part II (Sections 4 and 5) covers control and protection: who can see what, and how the record is protected wherever it lives. Part III (Sections 6 and 7) covers intelligence: how any AI can work with the record and what the AI is allowed to do on its own. Part IV (Sections 8 and 9) places the architecture in its program and federal context and names what is deliberately deferred. Appendices define terms, show the record at a glance, and index where things go.
 
 **Document history:**
+
+v0.24: The reproductive health boundary now covers procedures. Folder 07-procedures gains a subfolder reproductive/ for reproductive health procedures, held behind the same boundary as the other four places: a permission that names reproductive health opens all five, and no broad grant opens any of them. Section 6 adds the rule for a person asking a model about their own record: entries behind a sharing boundary are left out unless the person turns them on for that conversation, clears a warning that says where the question will be processed, and the action is written to the access history. Section 2, Section 6, Appendix B, and Appendix C state the rules. Built on v0.23 of November 5, 2026.
 
 v0.23: The reproductive health boundary widened from laboratory results to every reproductive health entry an export or capture brings. Folders 03-conditions, 04-medications, and 08-encounters each gain a subfolder reproductive/ for reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections), held behind the same boundary as 06-results/labs-reproductive: a permission that names reproductive health opens all four, and no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule. Section 2, Appendix B, and Appendix C state the rule. Built on v0.22 of October 31, 2026.
 
@@ -159,7 +161,7 @@ health-record/
  06-results/ lab results, vitals, device readings, questionnaires;
  subfolders labs/, labs-reproductive/, vitals/,
  device-readings/, implanted-devices/ (devices in your body)
- 07-procedures/ surgeries and procedures
+ 07-procedures/ surgeries and procedures; subfolder reproductive/
  08-encounters/ visits and hospital stays; subfolder reproductive/
  09-documents/ original scans, photos, files, clinician notes
  10-care-plans/ treatment plans, goals, referrals, pending orders
@@ -182,7 +184,7 @@ health-record/
 Organizational choices that matter to the person who owns the record:
 
 - Categories you might want to share separately get their own folder. Vaccine records, reproductive health, behavioral health content, dental records, your journal, and your family’s history are kept structurally apart, so you can share one without exposing the others.
-- Reproductive health has one boundary across the record. Reproductive health labs file in 06-results/labs-reproductive, and reproductive health conditions, medications, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections) file in the reproductive/ subfolder of 03-conditions, 04-medications, and 08-encounters. A permission that names reproductive health opens all four; no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule over the entry's codes, and MUST NOT let an entry outside the boundary name an entry inside it by path.
+- Reproductive health has one boundary across the record. Reproductive health labs file in 06-results/labs-reproductive, and reproductive health conditions, medications, procedures, and visits (pregnancy, contraception, fertility, prenatal and postpartum care, and sexually transmitted infections) file in the reproductive/ subfolder of 03-conditions, 04-medications, 07-procedures, and 08-encounters. A permission that names reproductive health opens all five; no broad grant opens any of them. A conforming implementation MUST file these entries there by a deterministic rule over the entry's codes, and MUST NOT let an entry outside the boundary name an entry inside it by path.
 - The inbox shows what is waiting. Anything sitting in 00-inbox has been captured (a photo of a visit summary, or a visit record a provider sent back after check-in) but not yet filed. You can see the system’s to-do list just by looking.
 - Originals are never thrown away. Folder 09 keeps every scan and photo permanently, so any entry in the record can always be checked against the document it came from. A conforming implementation MUST provide no operation that overwrites or deletes an original in folder 09 or a filed entry; a correction is a new entry (Section 2.5), and removal where the law or the person requires it is an administrative action recorded in the access history.
 - The record looks forward as well as back. Referrals that have been placed but not yet scheduled, and orders that are pending, live in 10-care-plans, so the question “what is supposed to happen next” always has an answer.
@@ -512,6 +514,8 @@ Nothing in this design depends on a particular AI product. The record is folders
 
 Every AI reaches the record through one boundary, which this specification calls the healthcare harness: the software layer that sits between any model and the record and enforces the record's rules regardless of which model is working. The harness hands a model its context (Section 6.1) scoped to the acting party's grant; it is the only path by which a model reads entries, through a query layer rather than the files themselves; it applies the permissions of Section 4 as routing, so a model never sees a category the grant does not name; it holds every write behind the approval gate and the trust record of Section 7; and it writes every action to the access history. Because the harness belongs to the record and not to the model, a person can bring whichever model they choose, from a small open-weight model on their own computer to a connected service, and the record is governed the same way. A conforming implementation MUST provide this boundary and MUST NOT offer any model a path around it. How an implementation builds the harness is not standardized; what it must enforce is. Section 6.2 defines the Precision Profile, the derived working picture of one person's health state that a model reasons over instead of the full record, and states the direction for learning across profiles under the person's authorization.
 
+A person asking a model about their own record is the acting party, and their grant is the whole record. Even so, entries behind a sharing boundary (Section 2) are left out of what the harness hands the model unless the person turns them on for that conversation. A conforming implementation MUST then show a warning that says where the question will be processed, MUST NOT hand any protected entry to the model until the person clears the warning, and MUST write the action to the access history. The choice lasts for that conversation only, and a saved conversation that draws on a protected entry is kept behind the same boundary as that entry.
+
 ### 6.1 Context Files: How an AI Learns the Record
 
 An AI is most useful, and least dangerous, when it understands the record’s rules before it touches the record’s contents. AI agent tools have converged on a simple convention for this: a small instructions file the model reads first, which tells it what a body of material contains and how to work with it correctly (in current agent frameworks these are often called skills or agent context files). The record adopts the same convention as a first-class part of the architecture, so that any AI, from any vendor, arrives already knowing how this record works.
@@ -710,7 +714,7 @@ The complete folder organization in one table. Every folder is described in Part
 | 04-medications | Prescriptions, with vitamins and supplements kept separate; reproductive health medications in subfolder reproductive (own boundary) |
 | 05-immunizations | Vaccines |
 | 06-results | Lab results, vitals, device readings, functional status, questionnaires, and the Implanted Devices list, in subfolders labs, labs-reproductive (own boundary), vitals, device-readings, implanted-devices (Section 2.18) |
-| 07-procedures | Surgeries and procedures |
+| 07-procedures | Surgeries and procedures; reproductive health procedures in subfolder reproductive (own boundary) |
 | 08-encounters | Visits and hospital stays; reproductive health visits in subfolder reproductive (own boundary) |
 | 09-documents | Original scans, photos, files, and clinician notes: the permanent evidence layer |
 | 10-care-plans | Treatment plans, goals, referrals, pending orders, what happens next |
@@ -808,7 +812,7 @@ An alphabetical guide to where common content lives in the record. Folder number
 - Regenerative or experimental treatment: 07-procedures or 04-medications as applicable, full provenance even without a code (Section 3).
 - Rehabilitation or physical therapy log: 06-results; plan to 10-care-plans.
 - Reproductive health lab (pregnancy, fertility, STI screening): 06-results/labs-reproductive, behind its own sharing boundary (Section 2).
-- Reproductive health condition, medication, or visit (pregnancy, contraception, fertility, prenatal or postpartum care, STI): 03-conditions/reproductive, 04-medications/reproductive, or 08-encounters/reproductive, behind the same boundary as reproductive health labs (Section 2).
+- Reproductive health condition, medication, procedure, or visit (pregnancy, contraception, fertility, prenatal or postpartum care, STI): 03-conditions/reproductive, 04-medications/reproductive, 07-procedures/reproductive, or 08-encounters/reproductive, behind the same boundary as reproductive health labs (Section 2).
 - Request for disclosure: not a filed document: recorded in the access history with its outcome; confers no access by itself and expires if unanswered (Section 5.5).
 - School liaison correspondence: 18-education-support.
 - School therapy plan and progress: 18-education-support.
